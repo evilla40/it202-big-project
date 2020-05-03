@@ -91,10 +91,10 @@
         <!-- Second Screen -->
         <div id="table" class="view mdc-data-table"> </div>
         <!-- Weather Screen -->
-        <div id="weather" class="view"><p class="weather-goes-here"></p></div>
+        <div id="weather" class="view"><h3 class="weather-goes-here"></h3></div>
     </main>
 
-      
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>  
     <script type="text/javascript">
       mdc.topAppBar.MDCTopAppBar.attachTo(document.querySelector('header.mdc-top-app-bar'));
         
@@ -106,6 +106,7 @@
           (e) => { 
               document.querySelector("#search").style.display = "block";
               document.querySelector("#table").style.display = "none";
+              document.querySelector("#weather").style.display = "none";
               let exist = document.querySelector("#chart");
               if (exist) {
                   exist.remove();
@@ -147,29 +148,46 @@
           if (exist) {
               exist.remove();
           }
-          let p = document.querySelector(".weather-goes-here");
-          let coord = [];
-          function getLocation() {
+          let h3 = document.querySelector(".weather-goes-here");
+          let getLocation = () => {
               if (navigator.geolocation) {
                   navigator.geolocation.getCurrentPosition(showPosition);
               }
               else {
-                  p.textContent = "Geolocation is not supported by this browser.";
+                  h3.textContent = "Geolocation is not supported by this browser.";
               }
           }
-          function showPosition(position) {
-              coord.push(position.coords.latitude);
-              coord.push(position.coords.longitude);
-              p.textContent = "Latitude: " + position.coords.latitude + "<br>Longitude: " + position.coords.longitude;
+          let showPosition = (position) => {
+              lat = position.coords.latitude;
+              long = position.coords.longitude;
+              let myKey = "4d4a6cee9cd6a8bab1e59e35af936c5a";
+              let apiEndpoint = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + long + "&units=imperial&appid=" + myKey;
+              fetch(apiEndpoint)
+              .then(response => response.json())
+              .then(json => {
+                  console.log(json)
+                  h3.textContent = "Weather in " + json['name'];
+                  let weatherSection = document.querySelector("#weather");
+                  let divExist = weatherSection.querySelector("div");
+                  if (divExist) {
+                      divExist.remove();
+                  }
+                  let div = document.createElement("div");
+                  weatherSection.append(div);
+                  let p = document.createElement("p");
+                  p.textContent = json['weather'][0]['main'];
+                  div.append(p);
+                  let p1 = document.createElement("p");
+                  p1.textContent = "Temperature: " + json['main']['temp'];
+                  div.append(p1);
+                  let p2 = document.createElement("p");
+                  p2.textContent = "Feels Like: " + json['main']['feels_like'];
+                  div.append(p2);
+              });
           }
           getLocation();
-          console.log(coord);
+          
       });
-
-function showPosition(position) {
-  x.innerHTML = "Latitude: " + position.coords.latitude +
-  "<br>Longitude: " + position.coords.longitude;
-}
       
       var data;
       fetch("https://covidtracking.com/api/v1/states/daily.json")
@@ -329,6 +347,14 @@ function showPosition(position) {
               document.querySelector("#table").style.display = "block";
               console.log(dataset);
               ds = dataset;
+          
+              var db = new Dexie("MyFriendDB");
+              db.version(1).stores({
+	          friends: '++id,name,age'
+              //enemies: '++id,name'
+              });
+              db.friends.add({name: "Foo", age: 22, hometown: "Chicago"});
+              console.log(db.friends.where("age").equals(22).toArray());
           });
       
       //Default open to first screen
