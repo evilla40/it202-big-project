@@ -56,7 +56,7 @@
                 <button id="search-button" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Search">search</button>
                 <button id="table-button" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Table">view_module</button>
                 <button id="chart-button" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Chart">trending_up</button>
-                <button id="weather-button" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Weather">cloud_circle</button>
+                <button id="weather-button" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Weather">cloud</button>
             </section>
         </div>
     </header>
@@ -91,7 +91,7 @@
         <!-- Second Screen -->
         <div id="table" class="view mdc-data-table"> </div>
         <!-- Weather Screen -->
-        <div id="weather" class="view"></div>
+        <div id="weather" class="view"><p class="weather-goes-here"></p></div>
     </main>
 
       
@@ -116,6 +116,7 @@
           (e) => { 
               document.querySelector("#search").style.display = "none";
               document.querySelector("#table").style.display = "block";
+              document.querySelector("#weather").style.display = "none";
               let exist = document.querySelector("#chart");
               if (exist) {
                   exist.remove();
@@ -126,6 +127,7 @@
           (e) => { 
               document.querySelector("#search").style.display = "none";
               document.querySelector("#table").style.display = "none";
+              document.querySelector("#weather").style.display = "none";
               //document.querySelector("#chart").style.display = "block";
               let div = document.createElement("div");
               div.setAttribute("id", "chart");
@@ -140,18 +142,28 @@
           (e) => {
           document.querySelector("#search").style.display = "none";
           document.querySelector("#table").style.display = "none";
+          document.querySelector("#weather").style.display = "block";
           let exist = document.querySelector("#chart");
           if (exist) {
               exist.remove();
           }
-          /*var x = document.getElementById("demo");
+          let p = document.querySelector(".weather-goes-here");
+          let coord = [];
           function getLocation() {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(showPosition);
-          } else {
-            x.innerHTML = "Geolocation is not supported by this browser.";
+              if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(showPosition);
+              }
+              else {
+                  p.textContent = "Geolocation is not supported by this browser.";
+              }
           }
-          }*/
+          function showPosition(position) {
+              coord.push(position.coords.latitude);
+              coord.push(position.coords.longitude);
+              p.textContent = "Latitude: " + position.coords.latitude + "<br>Longitude: " + position.coords.longitude;
+          }
+          getLocation();
+          console.log(coord);
       });
 
 function showPosition(position) {
@@ -218,14 +230,26 @@ function showPosition(position) {
               let d = document.querySelector("#data-type");
               let valD = d.options[d.selectedIndex].value;
               console.log(valD);
-              if (valD == 'confirmed') {
+              if (valD == 'positive') {
                   title_val = 'Confirmed Cases of COVID-19 In Each State';
               }
+              else if (valD == 'positiveIncrease') {
+                  title_val = 'Daily New Confirmed Cases of COVID-19 In Each State';
+              }
               else if (valD == 'death') {
-                  title_val = 'COVID-19 Deaths In Each State';
+                  title_val = 'Total COVID-19 Deaths In Each State';
+              }
+              else if (valD == 'deathIncrease') {
+                  title_val = 'Daily New Confirmed Cases of COVID-19 In Each State';
+              }
+              else if (valD == 'hospitalizedCurrently') {
+                  title_val = 'Current Hospitalizations Due To COVID-19 In Each State';
+              }
+              else if (valD == 'hospitalizedIncrease') {
+                  title_val = 'Daily New Hospitalizations Due To COVID-19 In Each State';
               }
               else {
-                  title_val = 'Recovered Cases of COVID-19 In Each State';
+                  title_val = 'Total Recovered Cases of COVID-19 In Each State';
               }              
               let existing = document.querySelector("table");
               if (existing) {
