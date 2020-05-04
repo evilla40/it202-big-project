@@ -46,10 +46,23 @@
     </script>
   </head>
   <body>
+     <aside class="mdc-drawer mdc-drawer--modal">
+    <div class="mdc-drawer__content">
+      <nav class="mdc-list">
+        <a class="mdc-list-item mdc-list-item--activated" href="#home" aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">description</i>
+          <span class="mdc-list-item__text">Load Last Search</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mdc-drawer-scrim"></div>
 
     <header class="mdc-top-app-bar">
         <div class="mdc-top-app-bar__row">
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button">menu</button>
                 <span class="mdc-top-app-bar__title">COVID-19 Data</span>
             </section>
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
@@ -96,10 +109,33 @@
 
     <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>  
     <script type="text/javascript">
-      mdc.topAppBar.MDCTopAppBar.attachTo(document.querySelector('header.mdc-top-app-bar'));
         
+       mdc.ripple.MDCRipple.attachTo(document.querySelector('.foo-button'));
+
+    mdc.topAppBar.MDCTopAppBar.attachTo(document.querySelector('header.mdc-top-app-bar'));
+
+    const drawer = mdc.drawer.MDCDrawer.attachTo(document.querySelector('.mdc-drawer'));
+
+
+    document.querySelector(".mdc-top-app-bar__navigation-icon").addEventListener("click", 
+          (e) => {drawer.open = true;}
+      );
+      
       let ds = null;
       let title_val = null;
+        
+      document.querySelectorAll('aside.mdc-drawer a.mdc-list-item').forEach(item => {
+          item.addEventListener('click', event => {
+              /*document.querySelectorAll('div.view').forEach(item1 => {
+                  item1.style.display = "none";
+              })
+              let target = item.getAttribute("href");
+              document.querySelector(target).style.display = "block";*/
+              drawer.open = false;
+          })
+      }) 
+        
+      
         
       //Add event listener to SEARCH button
       document.querySelector("#search-button").addEventListener("click", 
@@ -165,7 +201,6 @@
               fetch(apiEndpoint)
               .then(response => response.json())
               .then(json => {
-                  console.log(json)
                   h3.textContent = "Weather in " + json['name'];
                   let weatherSection = document.querySelector("#weather");
                   let divExist = weatherSection.querySelector("div");
@@ -194,7 +229,6 @@
       .then(response => response.json())
       .then(json => {
           data = json;
-          console.log(data)
           let dList = document.querySelector("#states");
           let array = []
           for(let obj in json) {
@@ -247,7 +281,6 @@
               let temparray = []
               let d = document.querySelector("#data-type");
               let valD = d.options[d.selectedIndex].value;
-              console.log(valD);
               if (valD == 'positive') {
                   title_val = 'Confirmed Cases of COVID-19 In Each State';
               }
@@ -327,9 +360,13 @@
                       let temparray = []
                       let date = document.createElement("td");
                       date.setAttribute("class", "mdc-data-table__cell");
-                      date.textContent = data[obj]['date'];
+                      let day = parseInt(data[obj]['date']) - 20200000;
+                      day = day % 100;
+                      let month = (parseInt(data[obj]['date']) - 20200000 - day) / 100;
+                      let newDate = month.toString() + '-' + day.toString() + '-2020';
+                      date.textContent = newDate;
                       currtrRow.append(date);
-                      temparray.push(data[obj]['date']);
+                      temparray.push(newDate);
                       currtemparray = temparray;
                   }
                   for(let i in array) {
@@ -345,20 +382,38 @@
                   
               document.querySelector("#search").style.display = "none";
               document.querySelector("#table").style.display = "block";
-              console.log(dataset);
               ds = dataset;
+              //Reverse dataset so oldest entry is first, newest entry is last
+              let len = ds.length;
+              for (let i in ds) {
+                  i++;                  
+                  if(i == ((len/2) - ((len/2)%1))) {
+                      break;
+                  }
+                  let temp = ds[i];
+                  ds[i] = ds[len-i];
+                  ds[len-i] = temp;
+              }
           
-              var db = new Dexie("MyFriendDB");
+              var db = new Dexie("Searches");
               db.version(1).stores({
-	          friends: '++id,name,age'
+	          data: 'dataset,array,selection,title'
               //enemies: '++id,name'
               });
-              db.friends.add({name: "Foo", age: 22, hometown: "Chicago"});
-              console.log(db.friends.where("age").equals(22).toArray());
+              db.data.add({dataset: ds, array: array, selection: valD, title: title_val});
           });
       
       //Default open to first screen
-      document.querySelector("#search").style.display = "block";            
+      document.querySelector("#search").style.display = "block";    
+      
+      if ("serviceWorker" in navigator) {
+          window.addEventListener("load", function() {
+          navigator.serviceWorker
+          .register("/serviceWorker.js")
+          .then(res => console.log("service worker registered"))
+          .catch(err => console.log("service worker not registered", err))
+          })
+      }
     </script>
   </body>
 </html>
